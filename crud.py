@@ -1,14 +1,50 @@
+from datetime import timedelta
+from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
+from constants import ACCESS_TOKEN_EXPIRE_MINUTES
 import models
 import schemas
+import utils
 
-def get_user(db: Session, username: str):
-  return db.query(models.UserInfo).filter(models.UserInfo.username == username).first()
+def authn_user(db: Session, username: str, password: str):
+  user = db.query(models.UserInfo).filter(models.UserInfo.username == username).first()
+  is_authed = utils.verify_password(password, user.password)
+
+  if not is_authed:
+    raise HTTPException(
+      status_code=status.HTTP_401_UNAUTHORIZED,
+      detail="Incorrect username or password",
+      headers={"WWW-Authenticate": "Bearer"},
+    )
+
+  access_token = utils.create_token(
+    data={
+      "id": user.id,
+      "registration_status": user.registration_status,
+      "address_permanent": user.address_permanent,
+      "address_temporary": user.address_temporary,
+      "occupation": user.occupation,
+      "civil_status": user.civil_status,
+      "mobile": user.mobile,
+      "landline": user.landline,
+      "email_address": user.email_address,
+    },
+    expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+  )
+
+  return {
+    "access_token": access_token,
+    "token_type": "bearer"
+  }
+
+def get_user(current_user: schemas.UserInfoResponse=Depends(utils.get_current_user)):
+  return current_user
 
 def add_user(db: Session, username: str, password: str):
   user_info = models.UserInfo(
     username=username,
-    password=password,
+    password=utils.create_password_hash(password),
     registration_status="step1"
   )
 
@@ -18,7 +54,7 @@ def add_user(db: Session, username: str, password: str):
 
   return db.query(models.UserInfo).filter(models.UserInfo.username == username).first()
 
-def set_additional_info(db: Session, id: int, civil_status: str, occupation: str):
+def set_additional_info(db: Session, id: int, civil_status: str, occupation: str, current_user=Depends(utils.get_current_user)):
   db.query(models.UserInfo).filter(models.UserInfo.id == id).update({
     "civil_status": civil_status,
     "occupation": occupation,

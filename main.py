@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 import crud
@@ -7,6 +8,8 @@ import schemas
 from db_handler import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI(
   title="FDFC Server",
@@ -20,13 +23,19 @@ def get_db():
   finally:
     db.close()
 
-@app.post("/session", response_model=schemas.UserInfoResponse)
-def post_session(request: schemas.UserRequest, db: Session=Depends(get_db)):
-  user = crud.get_user(
+@app.post("/login", response_model=schemas.Token)
+def post_login(request: schemas.UserRequest, db: Session=Depends(get_db)):
+  response = crud.authn_user(
     db=db,
-    username=request.username
+    username=request.username,
+    password=request.password
   )
-  return user
+  return response
+
+@app.get("/user")
+def get_user(token: str=Depends(oauth2_scheme)):
+  response = crud.get_user()
+  return response
 
 @app.post("/register", response_model=schemas.UserInfoResponse)
 def post_register(request: schemas.UserRequest, db: Session=Depends(get_db)):
