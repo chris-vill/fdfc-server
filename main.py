@@ -20,8 +20,8 @@ def get_db():
   finally:
     db.close()
 
-@app.post("/session", response_model=schemas.UserInfoResponse)
-def post_session(request: schemas.UserRequest, db: Session=Depends(get_db)):
+@app.post("/login", response_model=schemas.UserInfoResponse)
+def post_login(request: schemas.UserRequest, db: Session=Depends(get_db)):
   user = crud.get_user(
     db=db,
     username=request.username
