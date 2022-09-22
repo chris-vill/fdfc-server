@@ -26,9 +26,9 @@ def set_additional_info(db: Session, id: int, civil_status: str, occupation: str
   })
   db.commit()
 
-  return True
+  return db.query(models.UserInfo).filter(models.UserInfo.id == id).first()
 
-def set_contact_info(db: Session, id: int, mobile: str, landline: int, email_address: str):
+def set_contact_info(db: Session, id: int, mobile: str, landline: str, email_address: str):
   db.query(models.UserInfo).filter(models.UserInfo.id == id).update({
     "mobile": mobile,
     "landline": landline,
@@ -37,7 +37,7 @@ def set_contact_info(db: Session, id: int, mobile: str, landline: int, email_add
   })
   db.commit()
 
-  return True
+  return db.query(models.UserInfo).filter(models.UserInfo.id == id).first()
 
 def set_location_info(db: Session, id: int, address_permanent: str, address_temporary: str):
   db.query(models.UserInfo).filter(models.UserInfo.id == id).update({
@@ -47,4 +47,4 @@ def set_location_info(db: Session, id: int, address_permanent: str, address_temp
   })
   db.commit()
 
-  return True
+  return db.query(models.UserInfo).filter(models.UserInfo.id == id).first()

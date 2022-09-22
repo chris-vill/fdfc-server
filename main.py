@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 import crud
@@ -11,6 +12,20 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
   title="FDFC Server",
   version="1.0.0"
+)
+
+origins = [
+  "http://localhost",
+  "http://localhost:3000",
+  "http://localhost:8000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 def get_db():
@@ -37,63 +52,33 @@ def post_register(request: schemas.UserRequest, db: Session=Depends(get_db)):
   )
   return response
 
-@app.put("/additional-info")
+@app.put("/additional-info", response_model=schemas.UserInfoResponse)
 def put_additional_info(request: schemas.AdditionalInfoRequest, db: Session=Depends(get_db)):
-  crud.set_additional_info(
+  response = crud.set_additional_info(
     db=db,
     id=request.id,
     civil_status=request.civil_status,
     occupation=request.occupation
   )
-  return {}
+  return response
 
-@app.put("/contact-info")
+@app.put("/contact-info", response_model=schemas.UserInfoResponse)
 def put_contact_info(request: schemas.ContactInfoRequest, db: Session=Depends(get_db)):
-  crud.set_contact_info(
+  response = crud.set_contact_info(
     db=db,
     id=request.id,
     mobile=request.mobile,
     landline=request.landline,
     email_address=request.email_address
   )
-  return {}
+  return response
 
-@app.put("/location-info")
+@app.put("/location-info", response_model=schemas.UserInfoResponse)
 def put_location_info(request: schemas.LocationInfoRequest, db: Session=Depends(get_db)):
-  crud.set_location_info(
+  response = crud.set_location_info(
     db=db,
     id=request.id,
     address_permanent=request.address_permanent,
     address_temporary=request.address_temporary
   )
-  return {}
-
-###
-#
-# Model
-# - user
-#   - username
-#   - password
-#   - registration_status
-#       - step1
-#       - step2
-#       - step3
-#       - finished
-#   - address_permanent
-#   - address_temporary
-#   - occupation
-#   - civil_status
-#   - mobile
-#   - landline
-#   - email_address
-#
-#
-#
-# Login
-#
-# POST /session
-#
-# DELETE /session
-#
-# Register
-###
+  return response

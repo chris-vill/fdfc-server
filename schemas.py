@@ -3,12 +3,13 @@ from typing import Optional
 
 class UserInfoResponse(BaseModel):
   id: int
+  registration_status: Optional[str] = None
   occupation: Optional[str] = None
   civil_status: Optional[str] = None
   address_permanent: Optional[str] = None
   address_temporary: Optional[str] = None
   mobile: Optional[str] = None
-  landline: Optional[int] = None
+  landline: Optional[str] = None
   email_address: Optional[str] = None
 
   class Config:
@@ -40,7 +41,7 @@ class LocationInfoRequest(BaseModel):
 class ContactInfoRequest(BaseModel):
     id: int
     mobile: str
-    landline: int
+    landline: str
     email_address: str
 
     class Config:
